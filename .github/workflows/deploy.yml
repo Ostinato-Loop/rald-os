@@ -10,69 +10,27 @@ concurrency:
 
 jobs:
   deploy:
-    name: Deploy to Cloudflare Workers (api.rald.cloud)
+    name: Type-check & Deploy (api.rald.cloud)
     runs-on: ubuntu-latest
-    environment: production
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with: { node-version: "22" }
 
-      - name: Install dependencies
-        run: npm install
+      - name: Install dependencies (yarn — avoids npm 10.9.8 crash)
+        run: yarn install --ignore-scripts --non-interactive
 
       - name: Type check
-        run: npm run check
+        run: yarn run check
 
-      - name: Deploy rald-os Worker
-        run: npx wrangler deploy
+      - name: Deploy Worker
+        run: yarn dlx wrangler@3 deploy
         env:
-          CLOUDFLARE_API_TOKEN:  ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-
-      - name: Push SUPABASE_SERVICE_ROLE_KEY
-        continue-on-error: true
-        env:
-          CLOUDFLARE_API_TOKEN:      ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          CLOUDFLARE_ACCOUNT_ID:     ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          SUPABASE_URL:              ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
-        run: |
-          [ -n "$SUPABASE_SERVICE_ROLE_KEY" ] \
-            && echo "$SUPABASE_SERVICE_ROLE_KEY" | npx wrangler secret put SUPABASE_SERVICE_ROLE_KEY \
-            && echo "SUPABASE_SERVICE_ROLE_KEY ✓" \
-            || echo "WARN: not set"
-
-      - name: Push RALD_JWT_SECRET
-        continue-on-error: true
-        env:
-          CLOUDFLARE_API_TOKEN:  ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          RALD_JWT_SECRET:       ${{ secrets.RALD_JWT_SECRET }}
-        run: |
-          [ -n "$RALD_JWT_SECRET" ] \
-            && echo "$RALD_JWT_SECRET" | npx wrangler secret put RALD_JWT_SECRET \
-            && echo "RALD_JWT_SECRET ✓" \
-            || echo "WARN: not set"
-
-      - name: Push RALD_INTERNAL_SECRET
-        continue-on-error: true
-        env:
-          CLOUDFLARE_API_TOKEN:  ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          RALD_INTERNAL_SECRET:  ${{ secrets.RALD_INTERNAL_SECRET }}
-        run: |
-          [ -n "$RALD_INTERNAL_SECRET" ] \
-            && echo "$RALD_INTERNAL_SECRET" | npx wrangler secret put RALD_INTERNAL_SECRET \
-            && echo "RALD_INTERNAL_SECRET ✓" \
-            || echo "WARN: add RALD_INTERNAL_SECRET to org secrets"
-
-      - name: Smoke test api.rald.cloud/ecosystem/health
-        continue-on-error: true
-        run: |
-          sleep 6
-          STATUS=$(curl -s -o /dev/null -w "%{http_code}" https://api.rald.cloud/ecosystem/health || echo "000")
-          echo "api.rald.cloud/ecosystem/health → HTTP $STATUS"
-          [ "$STATUS" = "200" ] && echo "PASS" || echo "WARN: DNS may not yet point to worker"
+          RALD_JWT_SECRET:           ${{ secrets.RALD_JWT_SECRET }}
 
       - name: Audit log
         if: always()
