@@ -1,0 +1,21 @@
+name = "rald-os"
+main = "src/index.ts"
+compatibility_date = "2025-06-01"
+
+[vars]
+ENVIRONMENT   = "production"
+SUPABASE_URL  = "https://onxdcikfttdmnhofsuwo.supabase.co"
+AUTH_URL      = "https://auth.rald.cloud"
+EVENTS_URL    = "https://events.rald.cloud"
+PAY_URL       = "https://pay.rald.cloud"
+
+# Secrets — set via: wrangler secret put <NAME>
+# Required: SUPABASE_SERVICE_ROLE_KEY  RALD_JWT_SECRET  RALD_INTERNAL_SECRET
+
+[[routes]]
+pattern = "api.rald.cloud/*"
+zone_name = "rald.cloud"
+
+[observability]
+enabled = true
+head_sampling_rate = 1
