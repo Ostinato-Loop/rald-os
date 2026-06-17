@@ -13,9 +13,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with: { node-version: "22" }
-      - name: Pin npm to stable version (npm 10.9.8 has Exit-handler crash bug)
-        run: npm install -g npm@10.5.2
-      - name: Install dependencies
-        run: npm install --ignore-scripts --no-audit
+      - name: Install dependencies (yarn — avoids npm 10.9.8 Exit-handler crash)
+        run: yarn install --ignore-scripts --non-interactive
       - name: Type check
-        run: npm run check
+        run: yarn run check
