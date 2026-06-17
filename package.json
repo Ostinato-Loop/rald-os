@@ -1,0 +1,20 @@
+{
+  "name": "rald-os",
+  "version": "1.0.0",
+  "description": "RALD OS — Ecosystem API Gateway (api.rald.cloud)",
+  "private": true,
+  "scripts": {
+    "dev":    "wrangler dev --port 8789",
+    "deploy": "wrangler deploy",
+    "check":  "tsc --noEmit"
+  },
+  "dependencies": {
+    "hono":         "^4.4.0",
+    "@supabase/supabase-js": "^2.43.4"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20240524.0",
+    "typescript":                "^5.4.5",
+    "wrangler":                  "^3.60.0"
+  }
+}
